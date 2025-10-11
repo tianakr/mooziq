@@ -3,7 +3,7 @@ import os, json
 #Task 0.1
 def main_menu():
     menu = f"""Welcome to Mooziq!
-    Choose one of the options bellow:
+    Choose one of the options below:
 
     1. Get All Artists
     2. Get All Albums By An Artist
