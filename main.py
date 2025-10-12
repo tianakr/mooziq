@@ -47,8 +47,7 @@ def main_menu():
                 print("Thank you for using Mooziq! Have a nice day :)")
             case _:
                 print("Invalid choice! Try again.")
-if __name__== "__main__":
-    main_menu()
+
 
 #Task 1
 
@@ -108,3 +107,8 @@ def find_id(chosen_artist):
         if info["name"] == chosen_artist:
             artist_id = info["id"]
     return artist_id
+
+#Start
+
+if __name__== "__main__":
+    main_menu()
