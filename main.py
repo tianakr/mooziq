@@ -62,10 +62,71 @@ def list_artists(display = True, display_artists = True):
     return artists
 
 #Task 2
-
 def get_albums():
-    albums = []
-    return albums
+    artist_id = list_artists()
+    artist = input("Please input the name of an artist: ").strip()
+    matched_albums = []
+
+    if artist not in artist_id:
+        print("Invalid. Try again")
+
+    for album_file in os.listdir("dataset/albums"):
+        if album_file[:-5] == artist_id[artist.lower()]["id"]:
+
+            with open("dataset/albums/" + album_file, "r", encoding="utf-8") as opened_file:
+                all_albums = json.load(opened_file)
+
+            print(f"Listing all available albums from {artist}...")
+
+            for album in all_albums["items"]:
+                matched_albums.append(album)
+
+    
+                title = album["name"]
+                date = album["release_date"] #format date YYYY-MM-DD to "August 3rd 2020"
+                group = date.split("-") #splits into: ["YYYY", "MM", "DD"] index 0, 1, 2
+                year = group[0]
+                month = group[1]
+                day = group[2]
+
+                month_formatted = 0
+
+                month_names = {
+                    "01": "January",
+                    "02": "February",
+                    "03": "March",
+                    "04": "April",
+                    "05": "May",
+                    "06":"June",
+                    "07": "July",
+                    "08": "August",
+                    "09": "September",
+                    "10": "October",
+                    "11": "November",
+                    "12": "December"
+                }
+
+                if month in month_names:
+                    month_formatted = month_names[month]
+
+                if day[1] == "1":
+                    suffix = "st"
+                elif day[1] == "2":
+                    suffix = "nd"
+                elif day[1] == "3":
+                    suffix = "rd"
+                else:
+                    suffix = "th"
+
+                pattern = r"\b0"
+
+                formatted_day = re.sub(pattern, "", day)
+
+                
+                print(f"- {title} was released in {month_formatted} {formatted_day}{suffix} {year} ")
+
+            return matched_albums
+
 #Task 3
 
 #display: turns logging on and off
@@ -173,7 +234,7 @@ def get_albums_year():
     chosen_year = input("Please enter a year: ")
 
     albums = []
-    for album_file in os.listdir("dataset/albums"):
+    for album_file in os.listdir("dataset/albums"):#["hjady678dtguyu67.json","ijtgrkjdem796856.json"]
 
         with open("dataset/albums/" + album_file, "r", encoding='utf-8') as file:
             albums_json = json.load(file)
