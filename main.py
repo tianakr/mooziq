@@ -68,7 +68,6 @@ def list_artists(display = True, display_artists = True):
 #Task 2
 def get_albums():
     artist_id = list_artists()
-
     artist = input("Please input the name of an artist: ").strip()
     matched_albums = []
 
@@ -76,10 +75,12 @@ def get_albums():
         print("Invalid. Try again")
 
     for album_file in os.listdir("dataset/albums"):
-        if album_file[:-5] == artist_id[artist]["id"]:
+        if album_file[:-5] == artist_id[artist.lower()]["id"]:
 
-            with open("dataset/albums/" + album_file + ".json", "r", encoding="utf-8") as all_albums:
-                all_albums = json.load(album_file)
+            with open("dataset/albums/" + album_file, "r", encoding="utf-8") as opened_file:
+                all_albums = json.load(opened_file)
+
+            print(f"Listing all available albums from {artist}...")
 
             for album in all_albums["items"]:
                 matched_albums.append(album)
@@ -125,7 +126,7 @@ def get_albums():
 
                 formatted_day = re.sub(pattern, "", day)
 
-                print(f"Listing all available albums from {artist}...")
+                
                 print(f"- {title} was released in {month_formatted} {formatted_day}{suffix} {year} ")
 
             return matched_albums
