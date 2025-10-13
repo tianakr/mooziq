@@ -1,11 +1,9 @@
 # This is where the entry point of your solution should be
-import os, json, csv
+import os, json, csv, re
 #Task 0.1
 def main_menu():
-    welcome_menu = f"""Welcome to Mooziq!
-Choose one of the options bellow:
-"""
-    menu = f"""1. Get All Artists
+
+    print(f"""1. Get All Artists
 2. Get All Albums By An Artist
 3. Get Top Tracks By An Artist
 4. Export Artist Data
@@ -14,38 +12,36 @@ Choose one of the options bellow:
 7. Calculate Longest Unique Word Sequence In A Song
 8. Weather Forecast For Upcoming Concerts
 9. Search Song By Lyrics
-10. Exit"""
-    option_exit = 0
-    print(welcome_menu)
-    while option_exit != 10:
-        print(menu)
+10. Exit""")
+    option = input("Type your option: ")
 
-        option = int(input("Type your option: "))
-
-        match option:
-            case 1:
-                list_artists()
-            case 2:
-                get_albums()
-            case 3:
-                get_top_tracks()
-            case 4:
-                export_artist()
-            case 5:
-                get_albums_year()
-            case 6:
-                analyze_lyrics()
-            case 7:
-                calculate_word()
-            case 8:
-                get_forecast()
-            case 9:
-                search_song()
-            case 10:
-                option_exit = 10
-                print("Thank you for using Mooziq! Have a nice day :)")
-            case _:
-                print("Invalid choice! Try again.")
+    match option:
+        case "1":
+            list_artists()
+        case "2":
+            get_albums()
+        case "3":
+            get_top_tracks()
+        case "4":
+            export_artist()
+        case "5":
+            get_albums_year()
+        case "6":
+            analyze_lyrics()
+        case "7":
+            calculate_word()
+        case "8":
+            get_forecast()
+        case "9":
+            search_song()
+        case "10":
+            print("Thank you for using Mooziq! Have a nice day :)")
+            return False
+        case _:
+            print("Invalid choice! Try again.")
+    
+    return True
+        
 
 
 #Task 1
@@ -79,8 +75,9 @@ def get_top_tracks(display = True, chosen_artist = None):
     
     if not chosen_artist: chosen_artist = input("Please input the name of an artist: ")
 
-    artist_id = artists[chosen_artist.lower()]["id"]
-    if artist_id == "":
+    if chosen_artist in artists.keys():
+        artist_id = artists[chosen_artist.lower()]["id"]
+    else:
         print("Invalid artist entered.")
         return
 
@@ -202,23 +199,55 @@ def get_albums_year():
 #Task 6
 
 #Task 7
-
+        
 #Task 8
 
 #Task 9
 
-#extra functions
-
-def find_id(chosen_artist):
-    artist_id = ""
-    for artist_file in os.listdir("dataset/artists"):
-        with open("dataset/artists/" + artist_file, "r", encoding="utf-8") as artist_file:
-            info = json.load(artist_file)
-        if info["name"] == chosen_artist:
-            artist_id = info["id"]
-    return artist_id
+def search_song():
+    if not("inverted_index.json" in sorted(os.listdir("dataset"))):
+        
+        inverted_index = {}
+        for song_file in sorted(os.listdir("dataset/songs")):
+            with open("dataset/songs/" + song_file, "r", encoding="utf-8") as current_file:
+                info = json.load(current_file)
+            lyrics = re.sub("[\',!\(\)?.\[\]]", "",info["lyrics"])
+            
+            for word in re.split(r"\s", lyrics.lower()):
+                if not(word in inverted_index.keys()):
+                    inverted_index[word] = [info["title"]]
+                elif not(info["title"] in inverted_index[word]):
+                    inverted_index[word].append(info["title"])
+                    
+        with open("dataset/inverted_index.json","w") as new_file:
+            json.dump(inverted_index, new_file)
+    
+    search = input("Please type the lyrics you'd like to search for: ").lower()
+    raw_input = re.sub("  ", " ", re.sub("[\',!\(\)?.\[\]]","", search))
+    with open("dataset/inverted_index.json", "r") as file:
+        info = json.load(file)
+    
+    query_result = {}
+    for word in raw_input.split():
+        if info.get(word) != None:
+            for song in info[word]:
+                if not(song in query_result.keys()):
+                    query_result[song] = 1
+                else:
+                    query_result[song] = query_result[song] + 1
+    
+    print(f"Listing matches for '{raw_input}'...")
+    for result in query_result.keys():
+        print(f"- {result} with a score of {query_result[result]}")
+    
+    return
 
 #Start
 
-if __name__== "__main__":
-    main_menu()
+print(f"""Welcome to Mooziq!
+Choose one of the options bellow:
+""")
+
+run = True
+while run:
+    run = main_menu()
