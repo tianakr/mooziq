@@ -136,7 +136,7 @@ def get_top_tracks(display = True, chosen_artist = None):
     
     if not chosen_artist: chosen_artist = input("Please input the name of an artist: ")
 
-    if chosen_artist in artists.keys():
+    if chosen_artist.lower() in artists.keys():
         artist_id = artists[chosen_artist.lower()]["id"]
     else:
         print("Invalid artist entered.")
