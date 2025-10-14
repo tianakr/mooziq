@@ -261,6 +261,60 @@ def get_albums_year():
 
 
 #Task 6
+lyrics = 0
+
+def analyze_lyrics():
+    songs = []
+    for songs_file in os.listdir("dataset/songs"):
+        with open("dataset/songs/" + songs_file, "r", encoding= "utf-8") as lyrics_file:
+            all_lyrics = json.load(lyrics_file)
+            songs.append(all_lyrics)
+
+    for i in range(len(songs)):
+        print(f"{i+1}. {songs[i]["title"]} by {songs[i]["artist"]}")
+    
+    index = int(input("Please select one of the following songs (number): ")) - 1
+    if index not in range(len(songs)):
+        print("Invalid choice.")
+        return
+    else:
+         moosifying_lyrics(songs[index])
+
+def moosifying_lyrics(song_data):
+        
+    lyrics = song_data["lyrics"]
+    pattern = r"\w+mo|mo"
+    
+    if not re.findall(pattern, lyrics):
+        print(f"{song_data["title"]} is not moose-compatible!")
+    
+    else:
+        print(f"Moosifying {song_data["title"]}...")
+
+        replacement = "moo"
+
+        text = re.sub(pattern, replacement, lyrics)
+
+        with open(f"moodified/{song_data["title"]}.txt", "w+") as moose_file:
+            moose_file.write(text)
+
+        print(f"File saved at ./moodified/{song_data["title"]} Moosified.txt")
+    moose = r"""
+             ___            ___
+            /   \          /   \
+            \_   \        /  __/
+                _\   \      /  /__
+                \___  \____/   __/
+                    \_       _/
+                    | @ @  \__
+                    |
+                    _/     /\
+                /o)  (o/\ \__
+                \_____/ /
+                \____/
+                    """
+    print(moose)
+
 
 #Task 7
 
