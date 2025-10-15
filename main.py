@@ -280,7 +280,7 @@ def analyze_lyrics():
 def moosifying_lyrics(song_data):
         
     lyrics = song_data["lyrics"]
-    pattern = r"\w+mo|mo"
+    pattern = r"(\w+)([\!\?])|mo|Mo"
     
     if not re.findall(pattern, lyrics):
         print(f"{song_data["title"]} is not moose-compatible!")
@@ -288,29 +288,28 @@ def moosifying_lyrics(song_data):
     else:
         print(f"Moosifying {song_data["title"]}...")
 
-        replacement = "moo"
-
+        replacement = r"moo\2"
+    
         text = re.sub(pattern, replacement, lyrics)
 
         with open(f"moodified/{song_data["title"]}.txt", "w+") as moose_file:
             moose_file.write(text)
 
         print(f"File saved at ./moodified/{song_data["title"]} Moosified.txt")
-    moose = r"""
-             ___            ___
-            /   \          /   \
-            \_   \        /  __/
-                _\   \      /  /__
-                \___  \____/   __/
-                    \_       _/
-                    | @ @  \__
-                    |
-                    _/     /\
-                /o)  (o/\ \__
-                \_____/ /
-                \____/
-                    """
-    print(moose)
+        moose = r""" ___            ___
+/   \          /   \
+\_   \        /  __/
+ _\   \      /  /__
+ \___  \____/   __/
+     \_       _/
+       | @ @  \__
+       |
+     _/     /\
+    /o)  (o/\ \__
+    \_____/ /
+      \____/
+"""
+        print(moose)
 
 
 #Task 7
