@@ -93,53 +93,65 @@ def get_albums(display = True, artist = None):
             for album in all_albums["items"]:
                 matched_albums.append(album)
 
-                
                 title = album["name"]
                 date = album["release_date"] #format date YYYY-MM-DD to "August 3rd 2020"
+                date_precision = album["release_date_precision"]
                 group = date.split("-") #splits into: ["YYYY", "MM", "DD"] index 0, 1, 2
-                year = group[0]
-                month = group[1]
-                day = group[2]
+                match date_precision:
+                    case "day":
+                        year = group[0]
+                        month = group[1]
+                        day = group[2]
 
-                month_formatted = 0
+                        month_formatted = 0
 
-                month_names = {
-                    "01": "January",
-                    "02": "February",
-                    "03": "March",
-                    "04": "April",
-                    "05": "May",
-                    "06":"June",
-                    "07": "July",
-                    "08": "August",
-                    "09": "September",
-                    "10": "October",
-                    "11": "November",
-                    "12": "December"
-                }
+                        month_names = {
+                            "01": "January",
+                            "02": "February",
+                            "03": "March",
+                            "04": "April",
+                            "05": "May",
+                            "06":"June",
+                            "07": "July",
+                            "08": "August",
+                            "09": "September",
+                            "10": "October",
+                            "11": "November",
+                            "12": "December"
+                        }
 
-                if month in month_names:
-                    month_formatted = month_names[month]
+                        if month in month_names:
+                            month_formatted = month_names[month]
 
-                if day[0] != "1":
-                    if day[1] == "1":
-                        suffix = "st"
-                    elif day[1] == "2":
-                        suffix = "nd"
-                    elif day[1] == "3":
-                        suffix = "rd"
-                    else:
-                        suffix = "th"
-                else:
-                    suffix = "th"
+                            if day[0] != "1":
+                                if day[1] == "1":
+                                    suffix = "st"
+                                elif day[1] == "2":
+                                    suffix = "nd"
+                                elif day[1] == "3":
+                                    suffix = "rd"
+                                else:
+                                    suffix = "th"
+                            else:
+                                suffix = "th"
 
-                pattern = r"\b0"
+                            pattern = r"\b0"
 
-                formatted_day = re.sub(pattern, "", day)
+                            formatted_day = re.sub(pattern, "", day)
 
-                if display:
-                    print(f"- \"{title}\" was released in {month_formatted} {formatted_day}{suffix} {year}.")
+                            if display:
+                                print(f"- \"{title}\" was released in {month_formatted} {formatted_day}{suffix} {year}.")
 
+                    case "year":
+                        year = group[0]
+
+                        if display:
+                            print(f"- \"{title}\" was released in {year}.")
+                    case _:
+                        print("ERROR: Precision format not recognized!")
+                        return
+
+                
             return matched_albums
 
 #Task 3
