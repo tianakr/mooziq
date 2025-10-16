@@ -315,6 +315,27 @@ def moosifying_lyrics(song_data):
 #Task 7
         
 #Task 8
+def get_forecast():
+    #list concerts
+    upcoming_artists = []
+    with open("dataset/concerts/concerts.csv", "r", encoding="utf-8") as concerts_file:
+        all_concerts = csv.DictReader(concerts_file)
+        print("Upcoming artists: ")
+        for row in all_concerts:
+            artist = row["artist"]
+            if artist not in upcoming_artists:
+                upcoming_artists.append(row["artist"])
+        for artist in upcoming_artists:
+            print(f"- {artist}")
+    chosen_artist = input("Please input the name of one of the following artists: ")
+    
+
+    #opening weather csv
+    with open("dataset/weather/weather.csv", "r", encoding="utf-8") as weather_file:
+        weather = csv.DictReader(weather_file)
+        print(f"Fetching weather forecast for {chosen_artist} concerts...")
+        for row in weather:
+
 
 #Task 9
 
