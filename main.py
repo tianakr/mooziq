@@ -397,24 +397,94 @@ def calculate_word():
 #Task 8
 def get_forecast():
     #list concerts
-    upcoming_artists = []
+    upcoming_concerts = {}#{"Billie Eilish":[("2027-12-12","GBG"),("2292-41-53","LON")],"Radiohead":[()],"Artist3":[()]}
     with open("dataset/concerts/concerts.csv", "r", encoding="utf-8") as concerts_file:
         all_concerts = csv.DictReader(concerts_file)
         print("Upcoming artists: ")
         for row in all_concerts:
             artist = row["artist"]
-            if artist not in upcoming_artists:
-                upcoming_artists.append(row["artist"])
-        for artist in upcoming_artists:
-            print(f"- {artist}")
-    chosen_artist = input("Please input the name of one of the following artists: ")
-    
+            year = int(row["year"])
+            month = int(row["month"])
+            day = int(row["day"])
+            date_formatted = (f"{year}-{month:02d}-{day:02d}")
+            concerts_location = row["city_code"]
 
-    """#opening weather csv
+            if artist.lower() not in upcoming_concerts:
+                upcoming_concerts[artist.lower()] = [(date_formatted, concerts_location, artist)]
+            else:
+                upcoming_concerts[artist.lower()].append((date_formatted, concerts_location, artist))
+        for artist in upcoming_concerts:
+            print(f"- {upcoming_concerts[artist][0][2]}")
+    chosen_artist = input("Please input the name of one of the following artists: ").lower()
+    if chosen_artist in upcoming_concerts:
+        artist_name = upcoming_concerts[chosen_artist][0][2]
+    else:
+        print("Error. Artist not found.")
+        return
+
+    #opening weather csv
+    target_weather = []
     with open("dataset/weather/weather.csv", "r", encoding="utf-8") as weather_file:
         weather = csv.DictReader(weather_file)
-        print(f"Fetching weather forecast for {chosen_artist} concerts...")
-        for row in weather:"""
+        print(f"Fetching weather forecast for \"{artist_name}\" concerts...")
+        print(f"{artist_name} has {len(upcoming_concerts[chosen_artist])} upcoming concert{'s' if len(upcoming_concerts[chosen_artist]) > 1 else ''}:")
+        for row in weather:
+            for date, city_code, artist_name in upcoming_concerts[chosen_artist.lower()]:
+                if row["date"] == date and row["city_code"] == city_code:
+                    target_weather.append(row)
+    
+    for weather in target_weather:
+        min_temp = int(weather["temperature_min"])
+        precipitation = float(weather["precipitation"])
+        wind = float(weather["wind_speed"])
+        city = weather["city"]
+        
+        recommendation = []
+        if min_temp <= 10:
+            recommendation.append("Wear warm clothes.")
+        if precipitation >= 2.3 and wind < 15:
+            recommendation.append("Bring an umbrella.")
+        if precipitation >= 2.3 and wind >= 15:
+            recommendation.append("Bring a raincoat.")
+        if recommendation==[]:
+            recommendation.append("Perfect weather!")
+
+        date_groups = weather["date"].split("-")
+        month = date_groups[1]
+        day = date_groups[2]
+        year = date_groups[0]
+
+        month_names = {
+                "01": "January",
+                "02": "February",
+                "03": "March",
+                "04": "April",
+                "05": "May",
+                "06":"June",
+                "07": "July",
+                "08": "August",
+                "09": "September",
+                "10": "October",
+                "11": "November",
+                "12": "December"
+            }
+
+        if month in month_names:
+            month_formatted = month_names[month]
+
+            if day[0] != "1":
+                if day[1] == "1":
+                    suffix = "st"
+                elif day[1] == "2":
+                    suffix = "nd"
+                elif day[1] == "3":
+                    suffix = "rd"
+                else:
+                    suffix = "th"
+            else:
+                suffix = "th"
+
+            print(f"- {city}, {month_formatted} {int(day)}{suffix} {year}. {" ".join(recommendation)}")
 
 
 #Task 9
