@@ -33,7 +33,7 @@ def main():
         case "5":
             get_albums_year()
         case "6":
-            analyze_lyrics()
+            moosify_lyrics()
         case "7":
             calculate_word()
         case "8":
@@ -134,6 +134,23 @@ def find_top_tracks_for_artist(artist_id):
         top_tracks.append((track["popularity"],track["name"]))
 
     return top_tracks
+
+
+def choose_song():
+
+    song_files = get_data_from_jsons("dataset/songs")
+    songs = [song_data for song_data in song_files.values()]
+
+    print("Available songs:")
+    for i in range(len(songs)):
+        print(f"{i+1}. {songs[i]["title"]} by {songs[i]["artist"]}")
+    
+    choice = int(input("Please select one of the following songs (number): ")) - 1
+
+    if choice not in range(len(songs)):
+        raise ValueError
+    else:
+        return songs[choice]
 
 
 #Task 1
@@ -276,8 +293,12 @@ def export_artist():
 #Task 5
 
 def get_albums_year():
-    
-    chosen_year = input("Please enter a year: ")
+
+    try:
+        chosen_year = int(input("Please enter a year: "))
+    except ValueError:
+        print("ERROR: Year must be an integer.")
+        return
 
     albums = []
     album_files = get_data_from_jsons("dataset/albums")
@@ -285,7 +306,7 @@ def get_albums_year():
 
         for album in album_data["items"]:
 
-            if album["release_date"][:4] == chosen_year:
+            if int(album["release_date"][:4]) == chosen_year:
 
                 for name, data in all_artists_data.items():
                     if data["id"] == file_name[:-5]:
@@ -304,28 +325,15 @@ def get_albums_year():
 
 
 #Task 6
-lyrics = 0
 
-def analyze_lyrics():
-    songs = []
-    for songs_file in sorted(os.listdir("dataset/songs")):
-        with open("dataset/songs/" + songs_file, "r", encoding= "utf-8") as lyrics_file:
-            all_lyrics = json.load(lyrics_file)
-            songs.append(all_lyrics)
-
-    print("Available songs:")
-    for i in range(len(songs)):
-        print(f"{i+1}. {songs[i]["title"]} by {songs[i]["artist"]}")
+def moosify_lyrics():
     
-    index = int(input("Please select one of the following songs (number): ")) - 1
-    if index not in range(len(songs)):
-        print("Invalid choice.")
+    try:
+        song_data = choose_song()
+    except ValueError:
+        print("ERROR: Chosen index is out of range or not an integer.")
         return
-    else:
-         moosifying_lyrics(songs[index])
-
-def moosifying_lyrics(song_data):
-        
+    
     lyrics = song_data["lyrics"]
     pattern = r"(\w+)([\!\?])|mo|Mo"
     
@@ -366,29 +374,12 @@ def moosifying_lyrics(song_data):
         
 def calculate_word():
 
-    all_songs = []
-    for song_file in sorted(os.listdir("dataset/songs")):
-
-        with open("dataset/songs/" + song_file, "r", encoding="utf-8") as file:
-            song_json = json.load(file)
-            all_songs.append(song_json)
-
-    print("Available songs:")
-    for i in range(len(all_songs)):
-        song_data = all_songs[i]
-        print(f"{i+1}. {song_data["title"]} by {song_data["artist"]}")
-    
     try:
-        choice = int(input("Please select one of the following songs (number): "))
+        chosen_song_data = choose_song()
     except ValueError:
-        print("ERROR: Input is not a number.")
-        return None
+        print("ERROR: Chosen index is out of range or not an integer.")
+        return
 
-    if choice > len(all_songs) or choice < 1:
-        print("ERROR: Invalid song chosen.")
-        return None
-    
-    chosen_song_data = all_songs[choice-1]
     lyrics = chosen_song_data["lyrics"].lower()
     
     lyrics = re.sub(r"['?!.,\(\)]", "", lyrics)
@@ -520,11 +511,10 @@ def search_song():
 
 #Start
 
-print(f"""Welcome to Mooziq!
+if __name__=="__main__":
+    print(f"""Welcome to Mooziq!
 Choose one of the options bellow:
 """)
-
-if __name__=="__main__":
     run_finished = 0
     while run_finished != 1:
         run_finished = main()
