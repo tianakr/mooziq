@@ -1,7 +1,13 @@
 # This is where the entry point of your solution should be
 import os, json, csv, re
+
+#Cached data
+
+all_artists_data = {}
+
 #Task 0.1
-def main_menu():
+
+def main():
 
     print(f"""1. Get All Artists
 2. Get All Albums By An Artist
@@ -36,185 +42,199 @@ def main_menu():
             search_song()
         case "10":
             print("Thank you for using Mooziq! Have a nice day :)")
-            return False
+            return 1
         case _:
             print("Invalid choice! Try again.")
     
-    return True
+    return 0
         
+#Helpers
+
+def get_data_from_jsons(folder_path):
+
+    data_for_all_files = {}
+    for file_name in sorted(os.listdir(folder_path)):
+
+        with open(folder_path + "/" + file_name, "r", encoding="utf-8") as open_file:
+            data_for_all_files[file_name] = json.load(open_file)
+    
+    return data_for_all_files
+
+
+def print_artists():
+
+    if not all_artists_data:
+    
+        artist_files = get_data_from_jsons("dataset/artists")
+
+        for artist_data in artist_files.values():
+
+            artist_name = artist_data["name"]
+            artist_id = artist_data["id"]
+            artist_genres = artist_data["genres"]
+
+            all_artists_data[artist_name.lower()] = {"id": artist_id, "name": artist_name, "genres": artist_genres}
+
+    for artist_data in all_artists_data.values():
+        print(f"- {artist_data["name"]}")
+
+
+def format_month_day(month, day):
+    month_names = {
+                "01": "January",
+                "02": "February",
+                "03": "March",
+                "04": "April",
+                "05": "May",
+                "06":"June",
+                "07": "July",
+                "08": "August",
+                "09": "September",
+                "10": "October",
+                "11": "November",
+                "12": "December"
+            }
+
+    month_formatted = month_names[month]
+
+    if day[0] != "1":
+        if day[1] == "1":
+            suffix = "st"
+        elif day[1] == "2":
+            suffix = "nd"
+        elif day[1] == "3":
+            suffix = "rd"
+        else:
+            suffix = "th"
+    else:
+        suffix = "th"
+
+    day = f"{int(day)}{suffix}"
+
+    return month_formatted, day
+
+
+def find_albums_for_artist(artist_id):
+
+    matched_albums = []
+    album_files = get_data_from_jsons("dataset/albums")
+    all_albums = album_files[artist_id+".json"]
+    for album in all_albums["items"]:
+        matched_albums.append(album)
+    
+    return  matched_albums
+
+
+def find_top_tracks_for_artist(artist_id):
+
+    top_tracks = []
+    top_track_files = get_data_from_jsons("dataset/top_tracks")
+    track_data = top_track_files[artist_id + ".json"]
+    for track in track_data["tracks"]:
+        top_tracks.append((track["popularity"],track["name"]))
+
+    return top_tracks
 
 
 #Task 1
 
-#display: turns logging on and off
-def list_artists(display = True, display_artists = True, reverse = False):
-    artists = {}
-    if display:
-        print("Artists found in the database:")
-    for artist_file in sorted(os.listdir("dataset/artists")):
-        with open("dataset/artists/" + artist_file, "r", encoding="utf-8") as current_file:
-            info = json.load(current_file)
-            if display_artists:
-                print(f"- {info["name"]}")
+def list_artists():
 
-        if reverse:
-            artists[info["id"]] = {"name":info["name"],"genres":info["genres"]}
-        else:
-            artists[info["name"].lower()] = {"id":info["id"],"name":info["name"],"genres":info["genres"]}
+    print("Artists found in the database:")
 
-    return artists
+    print_artists()
 
 #Task 2
-def get_albums(display = True, artist = None):
+def get_albums():
     
-    if not display:
-        artist_id = list_artists(display = False, display_artists = False)
-    else:
-        artist_id = list_artists(display=False)
+    print_artists()
+    
+    artist = input("Please input the name of one of the following artists: ").strip().lower()
 
-    if artist == None:
-        artist = input("Please input the name of one of the following artists: ").strip()
-
-    matched_albums = []
-
-    if artist.lower() not in artist_id:
-        print("Invalid. Try again")
+    if artist not in all_artists_data:
+        print("Artist is missing. Please try again.")
         return
 
-    for album_file in sorted(os.listdir("dataset/albums")):
-        if album_file[:-5] == artist_id[artist.lower()]["id"]:
+    print(f"Listing all available albums from {all_artists_data[artist]["name"]}...")
 
-            with open("dataset/albums/" + album_file, "r", encoding="utf-8") as opened_file:
-                all_albums = json.load(opened_file)
+    artist_id = all_artists_data[artist]["id"]
+    artist_albums = find_albums_for_artist(artist_id)
+    for album in artist_albums:
 
-            if display:
-                print(f"Listing all available albums from {artist_id[artist.lower()]["name"]}...")
+        title = album["name"]
+        date = album["release_date"] #format date YYYY-MM-DD to "August 3rd 2020"
+        date_precision = album["release_date_precision"]
+        group = date.split("-") #splits into: ["YYYY", "MM", "DD"] index 0, 1, 2
+        match date_precision:
+            case "day":
+                year = group[0]
+                month = group[1]
+                day = group[2]
 
-            for album in all_albums["items"]:
-                matched_albums.append(album)
+                month_formatted, formatted_day = format_month_day(month, day)
 
-                title = album["name"]
-                date = album["release_date"] #format date YYYY-MM-DD to "August 3rd 2020"
-                date_precision = album["release_date_precision"]
-                group = date.split("-") #splits into: ["YYYY", "MM", "DD"] index 0, 1, 2
-                match date_precision:
-                    case "day":
-                        year = group[0]
-                        month = group[1]
-                        day = group[2]
+                print(f"- \"{title}\" was released in {month_formatted} {formatted_day} {year}.")
 
-                        month_formatted = 0
+            case "year":
+                year = group[0]
 
-                        month_names = {
-                            "01": "January",
-                            "02": "February",
-                            "03": "March",
-                            "04": "April",
-                            "05": "May",
-                            "06":"June",
-                            "07": "July",
-                            "08": "August",
-                            "09": "September",
-                            "10": "October",
-                            "11": "November",
-                            "12": "December"
-                        }
-
-                        if month in month_names:
-                            month_formatted = month_names[month]
-
-                            if day[0] != "1":
-                                if day[1] == "1":
-                                    suffix = "st"
-                                elif day[1] == "2":
-                                    suffix = "nd"
-                                elif day[1] == "3":
-                                    suffix = "rd"
-                                else:
-                                    suffix = "th"
-                            else:
-                                suffix = "th"
-
-                            pattern = r"\b0"
-
-                            formatted_day = re.sub(pattern, "", day)
-
-                            if display:
-                                print(f"- \"{title}\" was released in {month_formatted} {formatted_day}{suffix} {year}.")
-
-                    case "year":
-                        year = group[0]
-
-                        if display:
-                            print(f"- \"{title}\" was released in {year}.")
-                    case _:
-                        print("ERROR: Precision format not recognized!")
-                        return
-
-                
-            return matched_albums
+                print(f"- \"{title}\" was released in {year}.")
+            case _:
+                print("ERROR: Precision format not recognized!")
+                return
 
 #Task 3
 
-#display: turns logging on and off
-#chosen_artist: if a chosen_artist is given as parameter, asking for input is skipped
-def get_top_tracks(display = True, chosen_artist = None):
-    artists = list_artists(display=False) if display else list_artists(display=False,display_artists=False)
+def get_top_tracks():
+    print_artists()
     
-    if not chosen_artist: chosen_artist = input("Please input the name of one of the following artists: ")
+    chosen_artist = input("Please input the name of one of the following artists: ").lower()
 
-    if chosen_artist.lower() in artists.keys():
-        artist_id = artists[chosen_artist.lower()]["id"]
+    if chosen_artist in all_artists_data:
+        artist_id = all_artists_data[chosen_artist]["id"]
+
+        print(f"Listing top tracks for {all_artists_data[chosen_artist]["name"]}...")
+
+        top_tracks = find_top_tracks_for_artist(artist_id)
+        for track in top_tracks:
+            track_popularity = track[0]
+            track_name = track[1]
+            if track_popularity <= 30:
+                print(f'- "{track_name}" has a popularity score of {track_popularity}. No one knows this track.')
+            elif track_popularity <= 50:
+                print(f'- "{track_name}" has a popularity score of {track_popularity}. Popular song.')
+            elif track_popularity <= 70:
+                print(f'- "{track_name}" has a popularity score of {track_popularity}. It is quite popular now!')
+            elif track_popularity > 70:
+                print(f'- "{track_name}" has a popularity score of {track_popularity}. It is made for the charts!')
+
     else:
         print("Invalid artist entered.")
-        return
-
-    with open("dataset/top_tracks/" + artist_id + ".json", "r", encoding="utf-8") as tracks_file:
-        dictionary = json.load(tracks_file)
-
-    if display:
-        print(f"Listing top tracks for {artists[chosen_artist.lower()]["name"]}...")
-
-    tracks = []
-    for track in dictionary["tracks"]:
-
-        tracks.append((track["popularity"],track["name"]))
-
-        if display:
-            if track["popularity"] <= 30:
-                print(f'- "{track["name"]}" has a popularity score of {track["popularity"]}. No one knows this track.')
-            elif track["popularity"] <= 50:
-                print(f'- "{track["name"]}" has a popularity score of {track["popularity"]}. Popular song.')
-            elif track["popularity"] <= 70:
-                print(f'- "{track["name"]}" has a popularity score of {track["popularity"]}. It is quite popular now!')
-            elif track["popularity"] > 70:
-                print(f'- "{track["name"]}" has a popularity score of {track["popularity"]}. It is made for the charts!')
-
-    return tracks
 
 #Task 4
 
 def export_artist():
-    artists = list_artists(display=False)
 
+    print_artists()
     chosen_artist = input("Please input the name of one of the following artists: ")
 
-    if chosen_artist.lower() in [name.lower() for name in artists.keys()]:
+    if chosen_artist in all_artists_data:
         
         #Create row
 
-        artist_id = artists[chosen_artist.lower()]["id"]
-        number_of_albums = len(get_albums(display=False,artist=chosen_artist))
-        top_tracks = get_top_tracks(display=False,chosen_artist=chosen_artist)
+        artist_id = all_artists_data[chosen_artist]["id"]
+        artist_name = all_artists_data[chosen_artist]["name"]
+        number_of_albums = len(find_albums_for_artist(artist_id))
+        top_tracks = find_top_tracks_for_artist(artist_id)
         top_track_1 = top_tracks[0][1]
         top_track_2 = top_tracks[1][1]
-        genres = ",".join(artists[chosen_artist.lower()]["genres"])
+        genres = ",".join(all_artists_data[chosen_artist]["genres"])
 
-        artist_data = [artist_id, chosen_artist.title(), number_of_albums, top_track_1, top_track_2, genres]
+        artist_data = [artist_id, artist_name, number_of_albums, top_track_1, top_track_2, genres]
 
         #Export
 
-        print(f'Exporting "{chosen_artist.title()}" data to CSV file...')
+        print(f'Exporting "{artist_name}" data to CSV file...')
 
         if os.path.isfile("dataset/artist-data.csv"):
 
@@ -225,7 +245,7 @@ def export_artist():
                 csv_reader = csv.reader(file)
 
                 for row in csv_reader:
-                    if row[1].lower() == chosen_artist.lower():
+                    if row[1].lower() == chosen_artist:
                         artist_row = csv_reader.line_num - 1
                     csv_data.append(row)
 
@@ -252,36 +272,35 @@ def export_artist():
         
     else:
         print(f"Error: {chosen_artist} not found in artists list.")
-        return
 
 #Task 5
 
 def get_albums_year():
     
-    artists = list_artists(display=False,display_artists=False,reverse=True)
     chosen_year = input("Please enter a year: ")
 
     albums = []
-    for album_file in sorted(os.listdir("dataset/albums")):
+    album_files = get_data_from_jsons("dataset/albums")
+    for file_name, album_data in album_files.items():
 
-        with open("dataset/albums/" + album_file, "r", encoding='utf-8') as file:
-            albums_json = json.load(file)
-
-        for album in albums_json["items"]:
+        for album in album_data["items"]:
 
             if album["release_date"][:4] == chosen_year:
 
-                artist_name = artists[album_file.split(".")[0]]["name"]
+                for name, data in all_artists_data.items():
+                    if data["id"] == file_name[:-5]:
+                        artist_name = name
+
                 albums.append((album["name"],artist_name))
+
     if len(albums) == 0:
         print(f"No albums were released in the year {chosen_year}.")
-        return None
-    
-    albums.sort()
+    else:
+        albums.sort()
 
-    print(f"Albums released in the year {chosen_year}:")
-    for album_name, album_artist in albums:
-        print(f'- "{album_name}" by {album_artist}.')
+        print(f"Albums released in the year {chosen_year}:")
+        for album_name, album_artist in albums:
+            print(f'- "{album_name}" by {album_artist}.')
 
 
 #Task 6
@@ -397,7 +416,7 @@ def calculate_word():
 #Task 8
 def get_forecast():
     #list concerts
-    upcoming_concerts = {}#{"Billie Eilish":[("2027-12-12","GBG"),("2292-41-53","LON")],"Radiohead":[()],"Artist3":[()]}
+    upcoming_concerts = {}
     with open("dataset/concerts/concerts.csv", "r", encoding="utf-8") as concerts_file:
         all_concerts = csv.DictReader(concerts_file)
         print("Upcoming artists: ")
@@ -454,37 +473,9 @@ def get_forecast():
         day = date_groups[2]
         year = date_groups[0]
 
-        month_names = {
-                "01": "January",
-                "02": "February",
-                "03": "March",
-                "04": "April",
-                "05": "May",
-                "06":"June",
-                "07": "July",
-                "08": "August",
-                "09": "September",
-                "10": "October",
-                "11": "November",
-                "12": "December"
-            }
+        month_formatted, formatted_day = format_month_day(month, day)
 
-        if month in month_names:
-            month_formatted = month_names[month]
-
-            if day[0] != "1":
-                if day[1] == "1":
-                    suffix = "st"
-                elif day[1] == "2":
-                    suffix = "nd"
-                elif day[1] == "3":
-                    suffix = "rd"
-                else:
-                    suffix = "th"
-            else:
-                suffix = "th"
-
-            print(f"- {city}, {month_formatted} {int(day)}{suffix} {year}. {" ".join(recommendation)}")
+        print(f"- {city}, {month_formatted} {formatted_day} {year}. {" ".join(recommendation)}")
 
 
 #Task 9
@@ -533,6 +524,7 @@ print(f"""Welcome to Mooziq!
 Choose one of the options bellow:
 """)
 
-run = True
-while run:
-    run = main_menu()
+if __name__=="__main__":
+    run_finished = 0
+    while run_finished != 1:
+        run_finished = main()
