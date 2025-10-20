@@ -114,3 +114,13 @@ def update_folder(path):
 
 def is_file(path):
     os.path.isfile(path)
+
+
+def write_to_json(file_path, data_to_write):
+    with open(file_path,"w") as file:
+            json.dump(data_to_write, file)
+
+
+def read_from_json(file_path):
+    with open(file_path, "r") as file:
+        return json.load(file)

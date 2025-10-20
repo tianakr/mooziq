@@ -1,5 +1,5 @@
 # This is where the entry point of your solution should be
-import os, json, csv, re
+import csv, re
 import data_handling as dh
 
 #Cached data
@@ -275,7 +275,7 @@ def calculate_word():
 
     lyrics = chosen_song_data["lyrics"].lower()
     
-    lyrics = re.sub(r"['?!.,\(\)]", "", lyrics)
+    lyrics = re.sub(r"['?!.,]", "", lyrics)
     lyrics = re.sub(r"[\r\n]", " ", lyrics)
     lyrics = re.sub(r"\s+", " ", lyrics)
 
@@ -283,17 +283,15 @@ def calculate_word():
     current_seq = []
     for word in lyrics.split():
 
-        if word not in current_seq:
-            current_seq.append(word)
+        if word in current_seq:
+            if len(current_seq) > longest_seq:
+                longest_seq = len(current_seq)
+                current_seq = current_seq[current_seq.index(word)+1:]
 
-        elif len(current_seq) > longest_seq:
-            longest_seq = len(current_seq)
-            current_seq = current_seq[current_seq.index(word)+1:]
-            current_seq.append(word)
+            else:
+                current_seq = current_seq[current_seq.index(word)+1:]
 
-        else:
-            current_seq = current_seq[current_seq.index(word)+1:]
-            current_seq.append(word)
+        current_seq.append(word)
         
     print(f"The length of the longest unique sequence in {chosen_song_data["title"]} is {longest_seq}")
             
@@ -316,6 +314,7 @@ def get_forecast():
                 upcoming_concerts[artist.lower()] = [(date_formatted, concerts_location, artist)]
             else:
                 upcoming_concerts[artist.lower()].append((date_formatted, concerts_location, artist))
+
         for artist in upcoming_concerts:
             print(f"- {upcoming_concerts[artist][0][2]}")
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
@@ -365,12 +364,11 @@ def get_forecast():
 #Task 9
 
 def search_song():
-    if not("inverted_index.json" in sorted(os.listdir("dataset"))):
+    if not dh.is_file("dataset/inverted_index.json"):
         
         inverted_index = {}
-        for song_file in sorted(os.listdir("dataset/songs")):
-            with open("dataset/songs/" + song_file, "r", encoding="utf-8") as current_file:
-                info = json.load(current_file)
+        song_files = dh.get_data_from_jsons("dataset/songs")
+        for info in song_files.values():
             lyrics = re.sub("[\',!\(\)?.\[\]]", "",info["lyrics"])
             
             for word in re.split(r"\s", lyrics.lower()):
@@ -379,13 +377,12 @@ def search_song():
                 elif not(info["title"] in inverted_index[word]):
                     inverted_index[word].append(info["title"])
                     
-        with open("dataset/inverted_index.json","w") as new_file:
-            json.dump(inverted_index, new_file)
+        dh.write_to_json("dataset/inverted_index.json", inverted_index)
     
     search = input("Please type the lyrics you'd like to search for: ").lower()
     raw_input = re.sub("  ", " ", re.sub("[\',!\(\)?.\[\]]","", search))
-    with open("dataset/inverted_index.json", "r") as file:
-        info = json.load(file)
+
+    info = dh.read_from_json("dataset/inverted_index.json")
     
     query_result = {}
     for word in raw_input.split():
@@ -405,9 +402,11 @@ def search_song():
 #Start
 
 if __name__=="__main__":
+
     print(f"""Welcome to Mooziq!
 Choose one of the options bellow:
 """)
+    
     run_finished = 0
     while run_finished != 1:
         run_finished = main()
