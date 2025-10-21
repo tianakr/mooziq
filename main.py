@@ -77,17 +77,15 @@ def get_albums(all_artists_data):
             date_precision = album["release_date_precision"]
             group = date.split("-") #splits into: ["YYYY", "MM", "DD"] index 0, 1, 2
             match date_precision:
+
                 case "day":
                     year = group[0]
                     month = group[1]
                     day = group[2]
-
                     month_formatted, formatted_day = utils.format_month_day(month, day)
-
                     print(f"- \"{title}\" was released in {month_formatted} {formatted_day} {year}.")
                 case "year":
                     year = group[0]
-
                     print(f"- \"{title}\" was released in {year}.")
                 case _:
                     print("ERROR: Precision format not recognized!")
@@ -96,14 +94,11 @@ def get_albums(all_artists_data):
 
 def get_top_tracks(all_artists_data):
     utils.print_artists(all_artists_data)
-    
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
-
     if chosen_artist in all_artists_data:
+
         artist_id = all_artists_data[chosen_artist]["id"]
-
         print(f"Listing top tracks for {all_artists_data[chosen_artist]["name"]}...")
-
         top_tracks = pd.find_top_tracks_for_artist(artist_id)
         for track in top_tracks:
             track_popularity = track[0]
@@ -116,7 +111,6 @@ def get_top_tracks(all_artists_data):
                 print(f'- "{track_name}" has a popularity score of {track_popularity}. It is quite popular now!')
             elif track_popularity > 70:
                 print(f'- "{track_name}" has a popularity score of {track_popularity}. It is made for the charts!')
-
     else:
         print("Invalid artist entered.")
 
@@ -130,7 +124,6 @@ def export_artist(all_artists_data):
     if chosen_artist in all_artists_data:
         
         #Create row
-
         artist_id = all_artists_data[chosen_artist]["id"]
         artist_name = all_artists_data[chosen_artist]["name"]
         number_of_albums = len(pd.find_albums_for_artist(artist_id))
@@ -144,14 +137,11 @@ def export_artist(all_artists_data):
         artist_data.update(artist_data_rest)
 
         #Export
-
         print(f'Exporting "{artist_name}" data to CSV file...')
-
         csv_header = ["artist_id","artist_name","number_of_albums","top_track_1","top_track_2","genres"]
         if pd.is_existing("dataset/artist-data.csv"):
 
             csv_data = pd.read_csv("dataset/artist-data.csv")
-
             artist_found = False
             i = 0
             for row in csv_data:
@@ -167,11 +157,9 @@ def export_artist(all_artists_data):
                 csv_data.append(artist_data)
                 pd.write_to_csv("dataset/artist-data.csv", csv_data, csv_header)
                 print("Data successfully appended.")
-
         else:
             pd.write_to_csv("dataset/artist-data.csv", [artist_data], csv_header)
-            print("Data successfully appended.")
-        
+            print("Data successfully appended.") 
     else:
         print(f"Error: {chosen_artist} not found in artists list.")
 
@@ -222,7 +210,6 @@ def moosify_lyrics():
         replacement = r"moo\2"
         text = re.sub(pattern, replacement, lyrics)
         pd.update_folder("./moosified")
-        
         with open(f"moosified/{song_data["title"]} Moosified.txt", "w+") as moose_file:
             moose_file.write(text)
 
