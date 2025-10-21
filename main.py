@@ -55,16 +55,12 @@ Choose one of the options bellow:
 #Task 1
 
 def list_artists(all_artists_data):
-
     print("Artists found in the database:")
-
     utils.print_artists(all_artists_data)
 
 #Task 2
 def get_albums(all_artists_data):
-    
     utils.print_artists(all_artists_data)
-    
     artist = input("Please input the name of one of the following artists: ").strip().lower()
 
     if artist not in all_artists_data:
@@ -89,7 +85,6 @@ def get_albums(all_artists_data):
                     month_formatted, formatted_day = utils.format_month_day(month, day)
 
                     print(f"- \"{title}\" was released in {month_formatted} {formatted_day} {year}.")
-
                 case "year":
                     year = group[0]
 
@@ -144,10 +139,10 @@ def export_artist(all_artists_data):
         top_track_2 = top_tracks[1][1]
         genres = ",".join(all_artists_data[chosen_artist]["genres"])
 
-        
         artist_data = {"artist_id":artist_id, "artist_name":artist_name, "number_of_albums":number_of_albums}
         artist_data_rest = {"top_track_1":top_track_1, "top_track_2":top_track_2, "genres":genres}
         artist_data.update(artist_data_rest)
+
         #Export
 
         print(f'Exporting "{artist_name}" data to CSV file...')
@@ -160,7 +155,6 @@ def export_artist(all_artists_data):
             artist_found = False
             i = 0
             for row in csv_data:
-
                 if row["artist_name"].lower() == chosen_artist:
                     csv_data[i] = artist_data
                     artist_found = True
@@ -194,11 +188,8 @@ def get_albums_year(all_artists_data):
     albums = []
     album_files = pd.get_data_from_jsons("dataset/albums")
     for file_name, album_data in album_files.items():
-
         for album in album_data["items"]:
-
             if int(album["release_date"][:4]) == chosen_year:
-
                 artist_name = utils.find_artist_name_by_id(all_artists_data, file_name[:-5])
                 albums.append((album["name"],artist_name))
 
@@ -206,7 +197,6 @@ def get_albums_year(all_artists_data):
         print(f"No albums were released in the year {chosen_year}.")
     else:
         albums.sort()
-
         print(f"Albums released in the year {chosen_year}:")
         for album_name, album_artist in albums:
             print(f'- "{album_name}" by {album_artist}.')
@@ -229,11 +219,8 @@ def moosify_lyrics():
         print(f"{song_data["title"]} by {song_data["artist"]} is not moose-compatible!")
     
     else:
-
         replacement = r"moo\2"
-    
         text = re.sub(pattern, replacement, lyrics)
-
         pd.update_folder("./moosified")
         
         with open(f"moosified/{song_data["title"]} Moosified.txt", "w+") as moose_file:
@@ -268,10 +255,9 @@ def calculate_word():
         return
 
     lyrics = chosen_song_data["lyrics"].lower()
-    
     lyrics = re.sub(r"['?!.,\(\)]", "", lyrics)
     lyrics = re.sub(r"[\r\n]", " ", lyrics)
-    lyrics = re.sub(r" +", " ", lyrics)
+    lyrics = re.sub(r"\s+", " ", lyrics)
 
     longest_seq = 0
     current_seq = []
@@ -281,7 +267,6 @@ def calculate_word():
             if len(current_seq) > longest_seq:
                 longest_seq = len(current_seq)
                 current_seq = current_seq[current_seq.index(word)+1:]
-
             else:
                 current_seq = current_seq[current_seq.index(word)+1:]
 
@@ -311,51 +296,51 @@ def get_forecast():
 
     for artist in upcoming_concerts:
         print(f"- {upcoming_concerts[artist][0][2]}")
+        
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
     if chosen_artist in upcoming_concerts:
         artist_name = upcoming_concerts[chosen_artist][0][2]
+    
+
+        #opening weather csv
+        concerts_amount = len(upcoming_concerts[chosen_artist])
+        print(f"Fetching weather forecast for \"{artist_name}\" concerts...")
+        print(f"{artist_name} has {concerts_amount} upcoming concert{'s' if concerts_amount > 1 else ''}:")
+
+        target_weather = []
+        weather = pd.read_csv("dataset/weather/weather.csv")
+
+        for row in weather:
+            for date, city_code, artist_name in upcoming_concerts[chosen_artist.lower()]:
+                if row["date"] == date and row["city_code"] == city_code:
+                    target_weather.append(row)
+        
+        for weather in target_weather:
+            min_temp = int(weather["temperature_min"])
+            precipitation = float(weather["precipitation"])
+            wind = float(weather["wind_speed"])
+            city = weather["city"]
+            
+            recommendation = []
+            if min_temp <= 10:
+                recommendation.append("Wear warm clothes.")
+            if precipitation >= 2.3 and wind < 15:
+                recommendation.append("Bring an umbrella.")
+            if precipitation >= 2.3 and wind >= 15:
+                recommendation.append("Bring a raincoat.")
+            if recommendation==[]:
+                recommendation.append("Perfect weather!")
+
+            date_groups = weather["date"].split("-")
+            month = date_groups[1]
+            day = date_groups[2]
+            year = date_groups[0]
+
+            month_formatted, formatted_day = utils.format_month_day(month, day)
+
+            print(f"- {city}, {month_formatted} {formatted_day} {year}. {" ".join(recommendation)}")
     else:
         print("Error. Artist not found.")
-        return
-
-    #opening weather csv
-
-    print(f"Fetching weather forecast for \"{artist_name}\" concerts...")
-    print(f"{artist_name} has {len(upcoming_concerts[chosen_artist])} upcoming concert{'s' if len(upcoming_concerts[chosen_artist]) > 1 else ''}:")
-
-    target_weather = []
-
-    weather = pd.read_csv("dataset/weather/weather.csv")
-
-    for row in weather:
-        for date, city_code, artist_name in upcoming_concerts[chosen_artist.lower()]:
-            if row["date"] == date and row["city_code"] == city_code:
-                target_weather.append(row)
-    
-    for weather in target_weather:
-        min_temp = int(weather["temperature_min"])
-        precipitation = float(weather["precipitation"])
-        wind = float(weather["wind_speed"])
-        city = weather["city"]
-        
-        recommendation = []
-        if min_temp <= 10:
-            recommendation.append("Wear warm clothes.")
-        if precipitation >= 2.3 and wind < 15:
-            recommendation.append("Bring an umbrella.")
-        if precipitation >= 2.3 and wind >= 15:
-            recommendation.append("Bring a raincoat.")
-        if recommendation==[]:
-            recommendation.append("Perfect weather!")
-
-        date_groups = weather["date"].split("-")
-        month = date_groups[1]
-        day = date_groups[2]
-        year = date_groups[0]
-
-        month_formatted, formatted_day = utils.format_month_day(month, day)
-
-        print(f"- {city}, {month_formatted} {formatted_day} {year}. {" ".join(recommendation)}")
 
 
 #Task 9
@@ -369,9 +354,9 @@ def search_song():
             lyrics = re.sub("[\',!\(\)?.\[\]]", "",info["lyrics"])
             
             for word in re.split(r"\s", lyrics.lower()):
-                if not(word in inverted_index.keys()):
+                if word not in inverted_index.keys():
                     inverted_index[word] = [info["title"]]
-                elif not(info["title"] in inverted_index[word]):
+                elif info["title"] not in inverted_index[word]:
                     inverted_index[word].append(info["title"])
                     
         pd.write_to_json("dataset/inverted_index.json", inverted_index)
@@ -385,7 +370,7 @@ def search_song():
     for word in raw_input.split():
         if info.get(word) != None:
             for song in info[word]:
-                if not(song in query_result.keys()):
+                if song not in query_result.keys():
                     query_result[song] = 1
                 else:
                     query_result[song] = query_result[song] + 1
