@@ -7,5 +7,3 @@
 7 Darius Created the function, and all the logic including regex, and sequence.
 8 Tatiana
 9 Ylva
-
-Darius: Most of the refactoring, creating separate files and creating helper functions.
