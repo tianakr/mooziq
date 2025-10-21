@@ -3,9 +3,7 @@ import re
 import utils
 import parsing_data as pd
 
-
 #Task 0.1
-
 def main():
 
     all_artists_data = pd.update_artists()
@@ -53,7 +51,6 @@ Choose one of the options bellow:
                 print("Invalid choice! Try again.")
         
 #Task 1
-
 def list_artists(all_artists_data):
     print("Artists found in the database:")
     utils.print_artists(all_artists_data)
