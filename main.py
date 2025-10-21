@@ -255,7 +255,6 @@ def calculate_word():
             
 #Task 8
 def get_forecast():
-    #list concerts
     upcoming_concerts = {}
     all_concerts = pd.read_csv("dataset/concerts/concerts.csv")
 
