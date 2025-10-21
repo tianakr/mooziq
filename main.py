@@ -1,15 +1,14 @@
 # This is where the entry point of your solution should be
 import re
 import utils
-import reading_data as rd
-import writing_data as wd
+import parsing_data as pd
 
 
 #Task 0.1
 
 def main():
 
-    all_artists_data = rd.update_artists()
+    all_artists_data = pd.update_artists()
     print(f"""Welcome to Mooziq!
 Choose one of the options bellow:
 """)
@@ -50,7 +49,6 @@ Choose one of the options bellow:
                 search_song()
             case "10":
                 print("Thank you for using Mooziq! Have a nice day :)")
-                run_finished = 1
             case _:
                 print("Invalid choice! Try again.")
         
@@ -75,7 +73,7 @@ def get_albums(all_artists_data):
         print(f"Listing all available albums from {all_artists_data[artist]["name"]}...")
 
         artist_id = all_artists_data[artist]["id"]
-        artist_albums = rd.find_albums_for_artist(artist_id)
+        artist_albums = pd.find_albums_for_artist(artist_id)
         for album in artist_albums:
 
             title = album["name"]
@@ -111,7 +109,7 @@ def get_top_tracks(all_artists_data):
 
         print(f"Listing top tracks for {all_artists_data[chosen_artist]["name"]}...")
 
-        top_tracks = rd.find_top_tracks_for_artist(artist_id)
+        top_tracks = pd.find_top_tracks_for_artist(artist_id)
         for track in top_tracks:
             track_popularity = track[0]
             track_name = track[1]
@@ -140,8 +138,8 @@ def export_artist(all_artists_data):
 
         artist_id = all_artists_data[chosen_artist]["id"]
         artist_name = all_artists_data[chosen_artist]["name"]
-        number_of_albums = len(rd.find_albums_for_artist(artist_id))
-        top_tracks = rd.find_top_tracks_for_artist(artist_id)
+        number_of_albums = len(pd.find_albums_for_artist(artist_id))
+        top_tracks = pd.find_top_tracks_for_artist(artist_id)
         top_track_1 = top_tracks[0][1]
         top_track_2 = top_tracks[1][1]
         genres = ",".join(all_artists_data[chosen_artist]["genres"])
@@ -155,9 +153,9 @@ def export_artist(all_artists_data):
         print(f'Exporting "{artist_name}" data to CSV file...')
 
         csv_header = ["artist_id","artist_name","number_of_albums","top_track_1","top_track_2","genres"]
-        if rd.is_existing("dataset/artist-data.csv"):
+        if pd.is_existing("dataset/artist-data.csv"):
 
-            csv_data = rd.read_csv("dataset/artist-data.csv")
+            csv_data = pd.read_csv("dataset/artist-data.csv")
 
             artist_found = False
             i = 0
@@ -169,15 +167,15 @@ def export_artist(all_artists_data):
                 i += 1
 
             if artist_found:
-                wd.write_to_csv("dataset/artist-data.csv", csv_data, csv_header)
+                pd.write_to_csv("dataset/artist-data.csv", csv_data, csv_header)
                 print("Data successfully updated.")
             else:
                 csv_data.append(artist_data)
-                wd.write_to_csv("dataset/artist-data.csv", csv_data, csv_header)
+                pd.write_to_csv("dataset/artist-data.csv", csv_data, csv_header)
                 print("Data successfully appended.")
 
         else:
-            wd.write_to_csv("dataset/artist-data.csv", [artist_data], csv_header)
+            pd.write_to_csv("dataset/artist-data.csv", [artist_data], csv_header)
             print("Data successfully appended.")
         
     else:
@@ -194,7 +192,7 @@ def get_albums_year(all_artists_data):
         return
 
     albums = []
-    album_files = rd.get_data_from_jsons("dataset/albums")
+    album_files = pd.get_data_from_jsons("dataset/albums")
     for file_name, album_data in album_files.items():
 
         for album in album_data["items"]:
@@ -219,7 +217,7 @@ def get_albums_year(all_artists_data):
 def moosify_lyrics():
     
     try:
-        song_data = rd.choose_song()
+        song_data = pd.choose_song()
     except ValueError:
         print("ERROR: Chosen index is out of range or not an integer.")
         return
@@ -236,7 +234,7 @@ def moosify_lyrics():
     
         text = re.sub(pattern, replacement, lyrics)
 
-        rd.update_folder("./moosified")
+        pd.update_folder("./moosified")
         
         with open(f"moosified/{song_data["title"]} Moosified.txt", "w+") as moose_file:
             moose_file.write(text)
@@ -264,7 +262,7 @@ def moosify_lyrics():
 def calculate_word():
 
     try:
-        chosen_song_data = rd.choose_song()
+        chosen_song_data = pd.choose_song()
     except ValueError:
         print("ERROR: Chosen index is out of range or not an integer.")
         return
@@ -295,7 +293,7 @@ def calculate_word():
 def get_forecast():
     #list concerts
     upcoming_concerts = {}
-    all_concerts = rd.read_csv("dataset/concerts/concerts.csv")
+    all_concerts = pd.read_csv("dataset/concerts/concerts.csv")
 
     print("Upcoming artists: ")
     for row in all_concerts:
@@ -327,7 +325,7 @@ def get_forecast():
 
     target_weather = []
 
-    weather = rd.read_csv("dataset/weather/weather.csv")
+    weather = pd.read_csv("dataset/weather/weather.csv")
 
     for row in weather:
         for date, city_code, artist_name in upcoming_concerts[chosen_artist.lower()]:
@@ -363,10 +361,10 @@ def get_forecast():
 #Task 9
 
 def search_song():
-    if not rd.is_existing("dataset/inverted_index.json"):
+    if not pd.is_existing("dataset/inverted_index.json"):
         
         inverted_index = {}
-        song_files = rd.get_data_from_jsons("dataset/songs")
+        song_files = pd.get_data_from_jsons("dataset/songs")
         for info in song_files.values():
             lyrics = re.sub("[\',!\(\)?.\[\]]", "",info["lyrics"])
             
@@ -376,12 +374,12 @@ def search_song():
                 elif not(info["title"] in inverted_index[word]):
                     inverted_index[word].append(info["title"])
                     
-        wd.write_to_json("dataset/inverted_index.json", inverted_index)
+        pd.write_to_json("dataset/inverted_index.json", inverted_index)
     
     search = input("Please type the lyrics you'd like to search for: ").lower()
     raw_input = re.sub("  ", " ", re.sub("[\',!\(\)?.\[\]]","", search))
 
-    info = rd.read_from_single_json("dataset/inverted_index.json")
+    info = pd.read_from_single_json("dataset/inverted_index.json")
     
     query_result = {}
     for word in raw_input.split():
