@@ -4,15 +4,20 @@ import utils
 import reading_data as rd
 import writing_data as wd
 
-#Cached data
-
-all_artists_data = rd.update_artists()
 
 #Task 0.1
 
 def main():
 
-    print(f"""1. Get All Artists
+    all_artists_data = rd.update_artists()
+    print(f"""Welcome to Mooziq!
+Choose one of the options bellow:
+""")
+    
+    option = ""
+    while option != "10":
+
+        print(f"""1. Get All Artists
 2. Get All Albums By An Artist
 3. Get Top Tracks By An Artist
 4. Export Artist Data
@@ -22,45 +27,43 @@ def main():
 8. Weather Forecast For Upcoming Concerts
 9. Search Song By Lyrics
 10. Exit""")
-    option = input("Type your option: ")
 
-    match option:
-        case "1":
-            list_artists()
-        case "2":
-            get_albums()
-        case "3":
-            get_top_tracks()
-        case "4":
-            export_artist()
-        case "5":
-            get_albums_year()
-        case "6":
-            moosify_lyrics()
-        case "7":
-            calculate_word()
-        case "8":
-            get_forecast()
-        case "9":
-            search_song()
-        case "10":
-            print("Thank you for using Mooziq! Have a nice day :)")
-            return 1
-        case _:
-            print("Invalid choice! Try again.")
-    
-    return 0
+        option = input("Type your option: ")
+        match option:
+            case "1":
+                list_artists(all_artists_data)
+            case "2":
+                get_albums(all_artists_data)
+            case "3":
+                get_top_tracks(all_artists_data)
+            case "4":
+                export_artist(all_artists_data)
+            case "5":
+                get_albums_year(all_artists_data)
+            case "6":
+                moosify_lyrics()
+            case "7":
+                calculate_word()
+            case "8":
+                get_forecast()
+            case "9":
+                search_song()
+            case "10":
+                print("Thank you for using Mooziq! Have a nice day :)")
+                run_finished = 1
+            case _:
+                print("Invalid choice! Try again.")
         
 #Task 1
 
-def list_artists():
+def list_artists(all_artists_data):
 
     print("Artists found in the database:")
 
     utils.print_artists(all_artists_data)
 
 #Task 2
-def get_albums():
+def get_albums(all_artists_data):
     
     utils.print_artists(all_artists_data)
     
@@ -98,7 +101,7 @@ def get_albums():
 
 #Task 3
 
-def get_top_tracks():
+def get_top_tracks(all_artists_data):
     utils.print_artists(all_artists_data)
     
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
@@ -126,7 +129,7 @@ def get_top_tracks():
 
 #Task 4
 
-def export_artist():
+def export_artist(all_artists_data):
 
     utils.print_artists(all_artists_data)
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
@@ -182,7 +185,7 @@ def export_artist():
 
 #Task 5
 
-def get_albums_year():
+def get_albums_year(all_artists_data):
 
     try:
         chosen_year = int(input("Please enter a year: "))
@@ -392,17 +395,9 @@ def search_song():
     print(f"Listing matches for '{raw_input}'...")
     for result in query_result.keys():
         print(f"- {result} with a score of {query_result[result]}")
-    
-    return
+
 
 #Start
 
 if __name__=="__main__":
-
-    print(f"""Welcome to Mooziq!
-Choose one of the options bellow:
-""")
-    
-    run_finished = 0
-    while run_finished != 1:
-        run_finished = main()
+    main()
