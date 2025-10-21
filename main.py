@@ -3,9 +3,7 @@ import re
 import utils
 import parsing_data as pd
 
-
 #Task 0.1
-
 def main():
 
     all_artists_data = pd.update_artists()
@@ -53,7 +51,6 @@ Choose one of the options bellow:
                 print("Invalid choice! Try again.")
         
 #Task 1
-
 def list_artists(all_artists_data):
     print("Artists found in the database:")
     utils.print_artists(all_artists_data)
@@ -91,7 +88,6 @@ def get_albums(all_artists_data):
                     print("ERROR: Precision format not recognized!")
 
 #Task 3
-
 def get_top_tracks(all_artists_data):
     utils.print_artists(all_artists_data)
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
@@ -115,7 +111,6 @@ def get_top_tracks(all_artists_data):
         print("Invalid artist entered.")
 
 #Task 4
-
 def export_artist(all_artists_data):
 
     utils.print_artists(all_artists_data)
@@ -164,7 +159,6 @@ def export_artist(all_artists_data):
         print(f"Error: {chosen_artist} not found in artists list.")
 
 #Task 5
-
 def get_albums_year(all_artists_data):
 
     try:
@@ -191,7 +185,6 @@ def get_albums_year(all_artists_data):
 
 
 #Task 6
-
 def moosify_lyrics():
     
     try:
@@ -231,8 +224,7 @@ def moosify_lyrics():
         print(moose)
 
 
-#Task 7
-        
+#Task 7       
 def calculate_word():
 
     try:
@@ -288,7 +280,6 @@ def get_forecast():
     if chosen_artist in upcoming_concerts:
         artist_name = upcoming_concerts[chosen_artist][0][2]
     
-
         #opening weather csv
         concerts_amount = len(upcoming_concerts[chosen_artist])
         print(f"Fetching weather forecast for \"{artist_name}\" concerts...")
@@ -324,14 +315,11 @@ def get_forecast():
             year = date_groups[0]
 
             month_formatted, formatted_day = utils.format_month_day(month, day)
-
             print(f"- {city}, {month_formatted} {formatted_day} {year}. {" ".join(recommendation)}")
     else:
         print("Error. Artist not found.")
 
-
 #Task 9
-
 def search_song():
     if not pd.is_existing("dataset/inverted_index.json"):
         
@@ -350,7 +338,6 @@ def search_song():
     
     search = input("Please type the lyrics you'd like to search for: ").lower()
     raw_input = re.sub("  ", " ", re.sub("[\',!\(\)?.\[\]]","", search))
-
     info = pd.read_from_single_json("dataset/inverted_index.json")
     
     query_result = {}
@@ -366,8 +353,6 @@ def search_song():
     for result in query_result.keys():
         print(f"- {result} with a score of {query_result[result]}")
 
-
 #Start
-
 if __name__=="__main__":
     main()
