@@ -1,10 +1,12 @@
 # This is where the entry point of your solution should be
-import csv, re
-import data_handling as dh
+import re
+import utils
+import reading_data as rd
+import writing_data as wd
 
 #Cached data
 
-all_artists_data = dh.update_artists()
+all_artists_data = rd.update_artists()
 
 #Task 0.1
 
@@ -55,12 +57,12 @@ def list_artists():
 
     print("Artists found in the database:")
 
-    dh.print_artists(all_artists_data)
+    utils.print_artists(all_artists_data)
 
 #Task 2
 def get_albums():
     
-    dh.print_artists(all_artists_data)
+    utils.print_artists(all_artists_data)
     
     artist = input("Please input the name of one of the following artists: ").strip().lower()
 
@@ -70,7 +72,7 @@ def get_albums():
         print(f"Listing all available albums from {all_artists_data[artist]["name"]}...")
 
         artist_id = all_artists_data[artist]["id"]
-        artist_albums = dh.find_albums_for_artist(artist_id)
+        artist_albums = rd.find_albums_for_artist(artist_id)
         for album in artist_albums:
 
             title = album["name"]
@@ -83,7 +85,7 @@ def get_albums():
                     month = group[1]
                     day = group[2]
 
-                    month_formatted, formatted_day = dh.format_month_day(month, day)
+                    month_formatted, formatted_day = utils.format_month_day(month, day)
 
                     print(f"- \"{title}\" was released in {month_formatted} {formatted_day} {year}.")
 
@@ -97,7 +99,7 @@ def get_albums():
 #Task 3
 
 def get_top_tracks():
-    dh.print_artists(all_artists_data)
+    utils.print_artists(all_artists_data)
     
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
 
@@ -106,7 +108,7 @@ def get_top_tracks():
 
         print(f"Listing top tracks for {all_artists_data[chosen_artist]["name"]}...")
 
-        top_tracks = dh.find_top_tracks_for_artist(artist_id)
+        top_tracks = rd.find_top_tracks_for_artist(artist_id)
         for track in top_tracks:
             track_popularity = track[0]
             track_name = track[1]
@@ -126,7 +128,7 @@ def get_top_tracks():
 
 def export_artist():
 
-    dh.print_artists(all_artists_data)
+    utils.print_artists(all_artists_data)
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
 
     if chosen_artist in all_artists_data:
@@ -135,51 +137,45 @@ def export_artist():
 
         artist_id = all_artists_data[chosen_artist]["id"]
         artist_name = all_artists_data[chosen_artist]["name"]
-        number_of_albums = len(dh.find_albums_for_artist(artist_id))
-        top_tracks = dh.find_top_tracks_for_artist(artist_id)
+        number_of_albums = len(rd.find_albums_for_artist(artist_id))
+        top_tracks = rd.find_top_tracks_for_artist(artist_id)
         top_track_1 = top_tracks[0][1]
         top_track_2 = top_tracks[1][1]
         genres = ",".join(all_artists_data[chosen_artist]["genres"])
 
-        artist_data = [artist_id, artist_name, number_of_albums, top_track_1, top_track_2, genres]
-
+        
+        artist_data = {"artist_id":artist_id, "artist_name":artist_name, "number_of_albums":number_of_albums}
+        artist_data_rest = {"top_track_1":top_track_1, "top_track_2":top_track_2, "genres":genres}
+        artist_data.update(artist_data_rest)
         #Export
 
         print(f'Exporting "{artist_name}" data to CSV file...')
 
-        if dh.is_file("dataset/artist-data.csv"):
+        csv_header = ["artist_id","artist_name","number_of_albums","top_track_1","top_track_2","genres"]
+        if rd.is_existing("dataset/artist-data.csv"):
 
-            artist_row = None
-            csv_data = []
+            csv_data = rd.read_csv("dataset/artist-data.csv")
 
-            with open("dataset/artist-data.csv", 'r') as file:
-                csv_reader = csv.reader(file)
+            artist_found = False
+            i = 0
+            for row in csv_data:
 
-                for row in csv_reader:
-                    if row[1].lower() == chosen_artist:
-                        artist_row = csv_reader.line_num - 1
-                    csv_data.append(row)
+                if row["artist_name"].lower() == chosen_artist:
+                    csv_data[i] = artist_data
+                    artist_found = True
+                i += 1
 
-            with open("dataset/artist-data.csv", 'w', newline='') as file:
-                csv_writer = csv.writer(file)
-
-                if type(artist_row) == int:
-                    csv_data[artist_row] = artist_data
-                    csv_writer.writerows(csv_data)
-                    print("Data successfully updated.")
-                else:
-                    csv_data.append(artist_data)
-                    csv_writer.writerows(csv_data)
-                    print("Data successfully appended.")
+            if artist_found:
+                wd.write_to_csv("dataset/artist-data.csv", csv_data, csv_header)
+                print("Data successfully updated.")
+            else:
+                csv_data.append(artist_data)
+                wd.write_to_csv("dataset/artist-data.csv", csv_data, csv_header)
+                print("Data successfully appended.")
 
         else:
-            csv_header = ["artist_id","artist_name","number_of_albums","top_track_1","top_track_2","genres"]
-
-            with open("dataset/artist-data.csv", "w+", newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(csv_header)
-                writer.writerow(artist_data)
-                print("Data successfully appended.")
+            wd.write_to_csv("dataset/artist-data.csv", [artist_data], csv_header)
+            print("Data successfully appended.")
         
     else:
         print(f"Error: {chosen_artist} not found in artists list.")
@@ -188,7 +184,6 @@ def export_artist():
 
 def get_albums_year():
 
-    dh.print_artists(all_artists_data)
     try:
         chosen_year = int(input("Please enter a year: "))
     except ValueError:
@@ -196,17 +191,15 @@ def get_albums_year():
         return
 
     albums = []
-    album_files = dh.get_data_from_jsons("dataset/albums")
+    album_files = rd.get_data_from_jsons("dataset/albums")
     for file_name, album_data in album_files.items():
 
         for album in album_data["items"]:
 
             if int(album["release_date"][:4]) == chosen_year:
 
-                for data in all_artists_data.values():
-
-                    if data["id"] == file_name[:-5]:
-                        albums.append((album["name"],data["name"]))
+                artist_name = utils.find_artist_name_by_id(all_artists_data, file_name[:-5])
+                albums.append((album["name"],artist_name))
 
     if len(albums) == 0:
         print(f"No albums were released in the year {chosen_year}.")
@@ -223,7 +216,7 @@ def get_albums_year():
 def moosify_lyrics():
     
     try:
-        song_data = dh.choose_song()
+        song_data = rd.choose_song()
     except ValueError:
         print("ERROR: Chosen index is out of range or not an integer.")
         return
@@ -240,7 +233,7 @@ def moosify_lyrics():
     
         text = re.sub(pattern, replacement, lyrics)
 
-        dh.update_folder("./moosified")
+        rd.update_folder("./moosified")
         
         with open(f"moosified/{song_data["title"]} Moosified.txt", "w+") as moose_file:
             moose_file.write(text)
@@ -268,16 +261,16 @@ def moosify_lyrics():
 def calculate_word():
 
     try:
-        chosen_song_data = dh.choose_song()
+        chosen_song_data = rd.choose_song()
     except ValueError:
         print("ERROR: Chosen index is out of range or not an integer.")
         return
 
     lyrics = chosen_song_data["lyrics"].lower()
     
-    lyrics = re.sub(r"['?!.,]", "", lyrics)
+    lyrics = re.sub(r"['?!.,\(\)]", "", lyrics)
     lyrics = re.sub(r"[\r\n]", " ", lyrics)
-    lyrics = re.sub(r"\s+", " ", lyrics)
+    lyrics = re.sub(r" +", " ", lyrics)
 
     longest_seq = 0
     current_seq = []
@@ -299,24 +292,24 @@ def calculate_word():
 def get_forecast():
     #list concerts
     upcoming_concerts = {}
-    with open("dataset/concerts/concerts.csv", "r", encoding="utf-8") as concerts_file:
-        all_concerts = csv.DictReader(concerts_file)
-        print("Upcoming artists: ")
-        for row in all_concerts:
-            artist = row["artist"]
-            year = int(row["year"])
-            month = int(row["month"])
-            day = int(row["day"])
-            date_formatted = (f"{year}-{month:02d}-{day:02d}")
-            concerts_location = row["city_code"]
+    all_concerts = rd.read_csv("dataset/concerts/concerts.csv")
 
-            if artist.lower() not in upcoming_concerts:
-                upcoming_concerts[artist.lower()] = [(date_formatted, concerts_location, artist)]
-            else:
-                upcoming_concerts[artist.lower()].append((date_formatted, concerts_location, artist))
+    print("Upcoming artists: ")
+    for row in all_concerts:
+        artist = row["artist"]
+        year = int(row["year"])
+        month = int(row["month"])
+        day = int(row["day"])
+        date_formatted = (f"{year}-{month:02d}-{day:02d}")
+        concerts_location = row["city_code"]
 
-        for artist in upcoming_concerts:
-            print(f"- {upcoming_concerts[artist][0][2]}")
+        if artist.lower() not in upcoming_concerts:
+            upcoming_concerts[artist.lower()] = [(date_formatted, concerts_location, artist)]
+        else:
+            upcoming_concerts[artist.lower()].append((date_formatted, concerts_location, artist))
+
+    for artist in upcoming_concerts:
+        print(f"- {upcoming_concerts[artist][0][2]}")
     chosen_artist = input("Please input the name of one of the following artists: ").lower()
     if chosen_artist in upcoming_concerts:
         artist_name = upcoming_concerts[chosen_artist][0][2]
@@ -325,15 +318,18 @@ def get_forecast():
         return
 
     #opening weather csv
+
+    print(f"Fetching weather forecast for \"{artist_name}\" concerts...")
+    print(f"{artist_name} has {len(upcoming_concerts[chosen_artist])} upcoming concert{'s' if len(upcoming_concerts[chosen_artist]) > 1 else ''}:")
+
     target_weather = []
-    with open("dataset/weather/weather.csv", "r", encoding="utf-8") as weather_file:
-        weather = csv.DictReader(weather_file)
-        print(f"Fetching weather forecast for \"{artist_name}\" concerts...")
-        print(f"{artist_name} has {len(upcoming_concerts[chosen_artist])} upcoming concert{'s' if len(upcoming_concerts[chosen_artist]) > 1 else ''}:")
-        for row in weather:
-            for date, city_code, artist_name in upcoming_concerts[chosen_artist.lower()]:
-                if row["date"] == date and row["city_code"] == city_code:
-                    target_weather.append(row)
+
+    weather = rd.read_csv("dataset/weather/weather.csv")
+
+    for row in weather:
+        for date, city_code, artist_name in upcoming_concerts[chosen_artist.lower()]:
+            if row["date"] == date and row["city_code"] == city_code:
+                target_weather.append(row)
     
     for weather in target_weather:
         min_temp = int(weather["temperature_min"])
@@ -356,7 +352,7 @@ def get_forecast():
         day = date_groups[2]
         year = date_groups[0]
 
-        month_formatted, formatted_day = dh.format_month_day(month, day)
+        month_formatted, formatted_day = utils.format_month_day(month, day)
 
         print(f"- {city}, {month_formatted} {formatted_day} {year}. {" ".join(recommendation)}")
 
@@ -364,10 +360,10 @@ def get_forecast():
 #Task 9
 
 def search_song():
-    if not dh.is_file("dataset/inverted_index.json"):
+    if not rd.is_existing("dataset/inverted_index.json"):
         
         inverted_index = {}
-        song_files = dh.get_data_from_jsons("dataset/songs")
+        song_files = rd.get_data_from_jsons("dataset/songs")
         for info in song_files.values():
             lyrics = re.sub("[\',!\(\)?.\[\]]", "",info["lyrics"])
             
@@ -377,12 +373,12 @@ def search_song():
                 elif not(info["title"] in inverted_index[word]):
                     inverted_index[word].append(info["title"])
                     
-        dh.write_to_json("dataset/inverted_index.json", inverted_index)
+        wd.write_to_json("dataset/inverted_index.json", inverted_index)
     
     search = input("Please type the lyrics you'd like to search for: ").lower()
     raw_input = re.sub("  ", " ", re.sub("[\',!\(\)?.\[\]]","", search))
 
-    info = dh.read_from_json("dataset/inverted_index.json")
+    info = rd.read_from_single_json("dataset/inverted_index.json")
     
     query_result = {}
     for word in raw_input.split():
